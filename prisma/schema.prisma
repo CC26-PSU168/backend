@@ -1,0 +1,218 @@
+// KampusCuan — Prisma Schema
+// 9 Models, 6 Enums — sesuai PRD BAB 3
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== ENUMS ====================
+
+enum AuthProvider {
+  CREDENTIALS
+  GOOGLE
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum SavingsTransactionType {
+  DEPOSIT
+  WITHDRAWAL
+}
+
+enum PaymentFrequency {
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum NotificationType {
+  BUDGET_ALERT
+  ANOMALY_DETECTED
+  BILL_REMINDER
+  SAVINGS_MILESTONE
+  WEEKLY_REPORT
+  SYSTEM
+}
+
+// ==================== MODELS ====================
+
+model User {
+  id                 String       @id @default(uuid())
+  name               String
+  email              String       @unique
+  passwordHash       String?
+  provider           AuthProvider @default(CREDENTIALS)
+  providerAccountId  String?
+  university         String?
+  monthlyAllowance   Decimal?     @db.Decimal(15, 2)
+  avatarUrl          String?
+  role               Role         @default(USER)
+  preferredCurrency  String       @default("IDR")
+  notifBudgetAlert   Boolean      @default(true)
+  notifWeeklyReport  Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  transactions       Transaction[]
+  budgets            Budget[]
+  savingsGoals       SavingsGoal[]
+  savingsTransactions SavingsTransaction[]
+  splitBills         SplitBill[]
+  scheduledPayments  ScheduledPayment[]
+  notifications      Notification[]
+
+  @@map("users")
+}
+
+model Transaction {
+  id              String          @id @default(uuid())
+  userId          String
+  type            TransactionType
+  date            DateTime
+  amount          Decimal         @db.Decimal(15, 2)
+  category        String
+  paymentMethod   String
+  description     String
+  notes           String?
+  isAutoCateg     Boolean         @default(false)
+  isAnomaly       Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([userId, category])
+  @@map("transactions")
+}
+
+model Budget {
+  id          String   @id @default(uuid())
+  userId      String
+  category    String
+  limitAmount Decimal  @db.Decimal(15, 2)
+  month       Int
+  year        Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, month, year])
+  @@index([userId, month, year])
+  @@map("budgets")
+}
+
+model SavingsGoal {
+  id            String    @id @default(uuid())
+  userId        String
+  name          String
+  targetAmount  Decimal   @db.Decimal(15, 2)
+  currentAmount Decimal   @default(0) @db.Decimal(15, 2)
+  deadline      DateTime?
+  icon          String?
+  isCompleted   Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions  SavingsTransaction[]
+
+  @@index([userId])
+  @@map("savings_goals")
+}
+
+model SavingsTransaction {
+  id        String                 @id @default(uuid())
+  goalId    String
+  userId    String
+  amount    Decimal                @db.Decimal(15, 2)
+  type      SavingsTransactionType
+  note      String?
+  createdAt DateTime               @default(now())
+
+  goal      SavingsGoal            @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+  @@map("savings_transactions")
+}
+
+model SplitBill {
+  id           String                 @id @default(uuid())
+  userId       String
+  title        String
+  totalAmount  Decimal                @db.Decimal(15, 2)
+  date         DateTime
+  isSettled    Boolean                @default(false)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  participants SplitBillParticipant[]
+
+  @@index([userId])
+  @@map("split_bills")
+}
+
+model SplitBillParticipant {
+  id          String    @id @default(uuid())
+  splitBillId String
+  name        String
+  shareAmount Decimal   @db.Decimal(15, 2)
+  isPaid      Boolean   @default(false)
+  paidAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  splitBill   SplitBill @relation(fields: [splitBillId], references: [id], onDelete: Cascade)
+
+  @@index([splitBillId])
+  @@map("split_bill_participants")
+}
+
+model ScheduledPayment {
+  id          String           @id @default(uuid())
+  userId      String
+  name        String
+  amount      Decimal          @db.Decimal(15, 2)
+  category    String
+  dueDay      Int
+  frequency   PaymentFrequency
+  nextDueDate DateTime
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("scheduled_payments")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  metadata  Json?
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
