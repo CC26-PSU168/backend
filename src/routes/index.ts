@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import authRoutes from './auth.routes';
+import transactionRoutes from './transaction.routes';
 
 const router = Router();
 
@@ -11,8 +12,10 @@ router.get('/health', (_req, res) => {
 // Auth
 router.use('/auth', authRoutes);
 
-// Placeholder routes — akan diimplementasi di Phase 2-7
-// router.use('/transactions', transactionRoutes);
+// Transactions
+router.use('/transactions', transactionRoutes);
+
+// Placeholder routes — akan diimplementasi di Phase 3+
 // router.use('/budgets', budgetRoutes);
 // router.use('/savings', savingsRoutes);
 // router.use('/split-bills', splitBillRoutes);
@@ -22,3 +25,4 @@ router.use('/auth', authRoutes);
 // router.use('/notifications', notificationRoutes);
 
 export default router;
+

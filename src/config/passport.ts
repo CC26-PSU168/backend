@@ -15,7 +15,7 @@ passport.use(
         // Find or create the user in the database
         const result = await AuthService.handleOAuthLogin(profile);
         // Pass the result (which contains user and tokens) to passport's done callback
-        done(null, result);
+        done(null, result as any);
       } catch (error) {
         done(error as Error, undefined);
       }

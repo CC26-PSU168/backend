@@ -7,9 +7,9 @@ export const validate = (schema: ZodSchema) => {
     try {
       schema.parse(req.body);
       next();
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof z.ZodError) {
-        const formattedErrors = error.errors.map((e) => ({
+        const formattedErrors = (error as any).errors.map((e: z.ZodIssue) => ({
           field: e.path.join('.'),
           message: e.message,
         }));

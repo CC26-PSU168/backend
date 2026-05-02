@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/auth.service';
 import { sendSuccess, sendError } from '../helpers/response.helper';
 import { verifyRefreshToken, generateTokenPair } from '../helpers/jwt.helper';
-import { AuthRequest } from '../middlewares/authenticate';
 
 export class AuthController {
   static async register(req: Request, res: Response, next: NextFunction) {
@@ -54,7 +53,7 @@ export class AuthController {
     }
   }
 
-  static async getMe(req: AuthRequest, res: Response, next: NextFunction) {
+  static async getMe(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user) {
         sendError(res, 401, 'Autentikasi diperlukan');

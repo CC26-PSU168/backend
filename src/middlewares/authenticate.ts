@@ -2,15 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken } from '../helpers/jwt.helper';
 import { sendError } from '../helpers/response.helper';
 
-export interface AuthRequest extends Request {
-  user?: {
-    userId: string;
-    email: string;
-    role: string;
-  };
-}
-
-export const authenticate = (req: AuthRequest, res: Response, next: NextFunction): void => {
+export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
   try {
     const authHeader = req.headers.authorization;
 
