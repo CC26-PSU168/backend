@@ -40,7 +40,7 @@ app.listen(PORT, () => {
   console.log(`
   ┌─────────────────────────────────────┐
   │                                     │
-  │   🚀 KampusCuan API Server          │
+  │   🚀 Budgetly API Server          │
   │   Running on port ${PORT}              │
   │   Environment: ${env.NODE_ENV}        │
   │                                     │

@@ -103,4 +103,15 @@ export class TransactionController {
       next(error);
     }
   }
+
+  static async exportCsv(req: Request, res: Response, next: NextFunction) {
+    try {
+      const csv = await TransactionService.exportCsv(req.user!.userId);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="transactions.csv"');
+      res.status(200).send(csv);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

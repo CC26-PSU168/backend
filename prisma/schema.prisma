@@ -1,4 +1,4 @@
-// KampusCuan — Prisma Schema
+// Budgetly — Prisma Schema
 // 9 Models, 6 Enums — sesuai PRD BAB 3
 
 generator client {

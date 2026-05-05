@@ -13,6 +13,7 @@ router.use(authenticate);
 router.get('/summary', TransactionController.getSummary);
 router.get('/monthly-trend', TransactionController.getMonthlyTrend);
 router.get('/by-category', TransactionController.getByCategory);
+router.get('/export', TransactionController.exportCsv);
 
 // CRUD
 router.get('/', TransactionController.getAll);

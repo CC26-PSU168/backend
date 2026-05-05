@@ -74,7 +74,7 @@ export class TransactionService {
     const [year, month, day] = data.date.split('-').map(Number);
     const txDate = new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds());
 
-    return prisma.transaction.create({
+    const transaction = await prisma.transaction.create({
       data: {
         userId,
         type: data.type,
@@ -86,6 +86,14 @@ export class TransactionService {
         notes: data.notes || null,
       },
     });
+
+    if (transaction.type === 'EXPENSE') {
+      import('./budget.service').then(({ BudgetService }) => {
+        BudgetService.checkBudgetUsage(userId, transaction.category, transaction.date).catch(console.error);
+      });
+    }
+
+    return transaction;
   }
 
   static async update(userId: string, id: string, data: UpdateTransactionInput) {
@@ -98,13 +106,21 @@ export class TransactionService {
       throw { statusCode: 403, message: 'Akses ditolak' };
     }
 
-    return prisma.transaction.update({
+    const transaction = await prisma.transaction.update({
       where: { id },
       data: {
         ...data,
         date: data.date ? new Date(data.date) : undefined,
       },
     });
+
+    if (transaction.type === 'EXPENSE') {
+      import('./budget.service').then(({ BudgetService }) => {
+        BudgetService.checkBudgetUsage(userId, transaction.category, transaction.date).catch(console.error);
+      });
+    }
+
+    return transaction;
   }
 
   static async delete(userId: string, id: string) {
@@ -242,5 +258,27 @@ export class TransactionService {
         percentage: total > 0 ? Math.round((amount / total) * 100) : 0,
       }))
       .sort((a, b) => b.amount - a.amount);
+  }
+
+  static async exportCsv(userId: string): Promise<string> {
+    const transactions = await prisma.transaction.findMany({
+      where: { userId },
+      orderBy: { date: 'desc' },
+    });
+
+    const header = ['Date,Type,Category,Amount,Payment Method,Description,Notes\n'];
+    const rows = transactions.map((t) => {
+      const date = t.date.toISOString().split('T')[0];
+      const type = t.type;
+      const category = `"${t.category}"`;
+      const amount = t.amount.toString();
+      const paymentMethod = `"${t.paymentMethod}"`;
+      const description = `"${t.description.replace(/"/g, '""')}"`;
+      const notes = `"${(t.notes || '').replace(/"/g, '""')}"`;
+
+      return `${date},${type},${category},${amount},${paymentMethod},${description},${notes}`;
+    });
+
+    return header.concat(rows).join('\n');
   }
 }
