@@ -39,4 +39,14 @@ export class ProfileController {
       next(error);
     }
   }
+
+  static async deleteAccount(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { password } = req.body;
+      const result = await ProfileService.deleteAccount(req.user!.userId, password);
+      sendSuccess(res, 200, result.message);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

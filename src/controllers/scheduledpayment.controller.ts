@@ -57,4 +57,15 @@ export class ScheduledPaymentController {
       next(error);
     }
   }
+
+  static async markPaid(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) { sendError(res, 401, 'Autentikasi diperlukan'); return; }
+      const payment = await ScheduledPaymentService.markPaid(req.user.userId, req.params.id as string);
+      sendSuccess(res, 200, 'Tagihan berhasil ditandai lunas', payment);
+    } catch (error: any) {
+      if (error.statusCode) { sendError(res, error.statusCode, error.message); return; }
+      next(error);
+    }
+  }
 }

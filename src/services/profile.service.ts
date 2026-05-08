@@ -76,4 +76,24 @@ export class ProfileService {
       },
     });
   }
+
+  static async deleteAccount(userId: string, password?: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw { statusCode: 404, message: 'User tidak ditemukan' };
+
+    // For credentials users, verify password before deletion
+    if (user.provider === 'CREDENTIALS') {
+      if (!password) {
+        throw { statusCode: 400, message: 'Password harus diisi untuk menghapus akun' };
+      }
+      const isValid = await bcrypt.compare(password, user.passwordHash || '');
+      if (!isValid) {
+        throw { statusCode: 401, message: 'Password salah' };
+      }
+    }
+
+    // Cascade delete is handled by Prisma schema (onDelete: Cascade)
+    await prisma.user.delete({ where: { id: userId } });
+    return { message: 'Akun berhasil dihapus' };
+  }
 }

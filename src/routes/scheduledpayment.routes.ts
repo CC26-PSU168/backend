@@ -12,6 +12,7 @@ router.get('/', ScheduledPaymentController.getAll);
 router.post('/', validate(createScheduledPaymentSchema), ScheduledPaymentController.create);
 router.put('/:id', validate(updateScheduledPaymentSchema), ScheduledPaymentController.update);
 router.patch('/:id/toggle', ScheduledPaymentController.toggleActive);
+router.patch('/:id/mark-paid', ScheduledPaymentController.markPaid);
 router.delete('/:id', ScheduledPaymentController.delete);
 
 export default router;

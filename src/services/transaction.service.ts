@@ -149,13 +149,19 @@ export class TransactionService {
     const prevStartDate = new Date(y, m - 2, 1);
     const prevEndDate = new Date(y, m - 1, 0, 23, 59, 59);
 
-    const [currentTransactions, prevTransactions] = await Promise.all([
+    // Fetch current month, previous month, AND all-time transactions in parallel
+    const [currentTransactions, prevTransactions, allTimeTransactions] = await Promise.all([
       prisma.transaction.findMany({
         where: { userId, date: { gte: startDate, lte: endDate } },
         select: { type: true, amount: true },
       }),
       prisma.transaction.findMany({
         where: { userId, date: { gte: prevStartDate, lte: prevEndDate } },
+        select: { type: true, amount: true },
+      }),
+      // All-time: fetch ALL transactions to calculate cumulative balance
+      prisma.transaction.findMany({
+        where: { userId },
         select: { type: true, amount: true },
       }),
     ]);
@@ -172,6 +178,7 @@ export class TransactionService {
 
     const current = calcTotals(currentTransactions);
     const prev = calcTotals(prevTransactions);
+    const allTime = calcTotals(allTimeTransactions);
 
     const pctChange = (curr: number, previous: number) =>
       previous === 0 ? (curr > 0 ? 100 : 0) : Math.round(((curr - previous) / previous) * 100);
@@ -179,7 +186,7 @@ export class TransactionService {
     return {
       income: current.income,
       expense: current.expense,
-      balance: current.balance,
+      balance: allTime.balance, // ← Cumulative all-time balance (not just this month!)
       incomeChange: pctChange(current.income, prev.income),
       expenseChange: pctChange(current.expense, prev.expense),
       balanceChange: pctChange(current.balance, prev.balance),

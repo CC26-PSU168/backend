@@ -77,4 +77,45 @@ export class ScheduledPaymentService {
 
     return prisma.scheduledPayment.delete({ where: { id } });
   }
+
+  static async markPaid(userId: string, id: string) {
+    const payment = await prisma.scheduledPayment.findUnique({ where: { id } });
+    if (!payment) throw { statusCode: 404, message: 'Tagihan tidak ditemukan' };
+    if (payment.userId !== userId) throw { statusCode: 403, message: 'Akses ditolak' };
+
+    // Advance nextDueDate to next period
+    const current = payment.nextDueDate;
+    let nextDue: Date;
+    if (payment.frequency === 'WEEKLY') {
+      nextDue = new Date(current.getTime() + 7 * 24 * 60 * 60 * 1000);
+    } else if (payment.frequency === 'MONTHLY') {
+      nextDue = new Date(current.getFullYear(), current.getMonth() + 1, payment.dueDay);
+    } else {
+      // YEARLY: advance to next year
+      nextDue = new Date(current.getFullYear() + 1, current.getMonth(), payment.dueDay);
+    }
+
+    const [updatedPayment, _tx] = await prisma.$transaction([
+      prisma.scheduledPayment.update({
+        where: { id },
+        data: {
+          nextDueDate: nextDue,
+        },
+      }),
+      // Create EXPENSE transaction for this payment
+      prisma.transaction.create({
+        data: {
+          userId,
+          type: 'EXPENSE',
+          amount: payment.amount,
+          category: payment.category,
+          paymentMethod: 'Other',
+          description: `Bayar Tagihan: ${payment.name}`,
+          date: new Date(),
+        },
+      }),
+    ]);
+
+    return updatedPayment;
+  }
 }
