@@ -1,5 +1,5 @@
 // Budgetly — Prisma Schema
-// 9 Models, 6 Enums — sesuai PRD BAB 3
+// 11 Models, 6 Enums
 
 generator client {
   provider = "prisma-client-js"
@@ -49,49 +49,49 @@ enum NotificationType {
 // ==================== MODELS ====================
 
 model User {
-  id                 String       @id @default(uuid())
-  name               String
-  email              String       @unique
-  passwordHash       String?
-  provider           AuthProvider @default(CREDENTIALS)
-  providerAccountId  String?
-  university         String?
-  monthlyAllowance   Decimal?     @db.Decimal(15, 2)
-  avatarUrl          String?
-  role               Role         @default(USER)
-  preferredCurrency  String       @default("IDR")
-  notifBudgetAlert   Boolean      @default(true)
-  notifWeeklyReport  Boolean      @default(true)
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
+  id                  String               @id @default(uuid())
+  name                String
+  email               String               @unique
+  passwordHash        String?
+  provider            AuthProvider         @default(CREDENTIALS)
+  providerAccountId   String?
+  university          String?
+  monthlyAllowance    Decimal?             @db.Decimal(15, 2)
+  avatarUrl           String?
+  role                Role                 @default(USER)
+  preferredCurrency   String               @default("IDR")
+  notifBudgetAlert    Boolean              @default(true)
+  notifWeeklyReport   Boolean              @default(true)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
 
-  transactions       Transaction[]
-  budgets            Budget[]
-  savingsGoals       SavingsGoal[]
+  transactions        Transaction[]
+  budgets             Budget[]
+  savingsGoals        SavingsGoal[]
   savingsTransactions SavingsTransaction[]
-  splitBills         SplitBill[]
-  scheduledPayments  ScheduledPayment[]
-  notifications      Notification[]
+  splitBills          SplitBill[]
+  scheduledPayments   ScheduledPayment[]
+  notifications       Notification[]
 
   @@map("users")
 }
 
 model Transaction {
-  id              String          @id @default(uuid())
-  userId          String
-  type            TransactionType
-  date            DateTime
-  amount          Decimal         @db.Decimal(15, 2)
-  category        String
-  paymentMethod   String
-  description     String
-  notes           String?
-  isAutoCateg     Boolean         @default(false)
-  isAnomaly       Boolean         @default(false)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  id            String          @id @default(uuid())
+  userId        String
+  type          TransactionType
+  date          DateTime
+  amount        Decimal         @db.Decimal(15, 2)
+  category      String
+  paymentMethod String
+  description   String
+  notes         String?
+  isAutoCateg   Boolean         @default(false)
+  isAnomaly     Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, date])
   @@index([userId, category])
@@ -116,18 +116,18 @@ model Budget {
 }
 
 model SavingsGoal {
-  id            String    @id @default(uuid())
+  id            String               @id @default(uuid())
   userId        String
   name          String
-  targetAmount  Decimal   @db.Decimal(15, 2)
-  currentAmount Decimal   @default(0) @db.Decimal(15, 2)
+  targetAmount  Decimal              @db.Decimal(15, 2)
+  currentAmount Decimal              @default(0) @db.Decimal(15, 2)
   deadline      DateTime?
   icon          String?
-  isCompleted   Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  isCompleted   Boolean              @default(false)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
 
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions  SavingsTransaction[]
 
   @@index([userId])
@@ -162,24 +162,54 @@ model SplitBill {
 
   user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   participants SplitBillParticipant[]
+  items        SplitBillItem[]
 
   @@index([userId])
   @@map("split_bills")
 }
 
 model SplitBillParticipant {
-  id          String    @id @default(uuid())
+  id          String                    @id @default(uuid())
   splitBillId String
   name        String
-  shareAmount Decimal   @db.Decimal(15, 2)
-  isPaid      Boolean   @default(false)
+  shareAmount Decimal                   @db.Decimal(15, 2)
+  isPaid      Boolean                   @default(false)
   paidAt      DateTime?
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime                  @default(now())
 
-  splitBill   SplitBill @relation(fields: [splitBillId], references: [id], onDelete: Cascade)
+  splitBill   SplitBill                 @relation(fields: [splitBillId], references: [id], onDelete: Cascade)
+  assignments SplitBillItemAssignment[]
 
   @@index([splitBillId])
   @@map("split_bill_participants")
+}
+
+model SplitBillItem {
+  id          String                    @id @default(uuid())
+  splitBillId String
+  name        String
+  qty         Int
+  unitPrice   Decimal                   @db.Decimal(15, 2)
+  subtotal    Decimal                   @db.Decimal(15, 2)
+  createdAt   DateTime                  @default(now())
+
+  splitBill   SplitBill                 @relation(fields: [splitBillId], references: [id], onDelete: Cascade)
+  assignments SplitBillItemAssignment[]
+
+  @@index([splitBillId])
+  @@map("split_bill_items")
+}
+
+model SplitBillItemAssignment {
+  id            String               @id @default(uuid())
+  itemId        String
+  participantId String
+
+  item          SplitBillItem        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  participant   SplitBillParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, participantId])
+  @@map("split_bill_item_assignments")
 }
 
 model ScheduledPayment {
