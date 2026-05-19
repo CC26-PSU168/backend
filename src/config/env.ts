@@ -13,8 +13,8 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   CLIENT_URL: z.string().url().default('http://localhost:3000'),
   ML_SERVICE_URL: z.string().url().default('http://localhost:8000'),
-  GOOGLE_CLIENT_ID: z.string().min(1, "Google Client ID required"),
-  GOOGLE_CLIENT_SECRET: z.string().min(1, "Google Client Secret required"),
+  GOOGLE_CLIENT_ID: z.string().optional().default(''),
+  GOOGLE_CLIENT_SECRET: z.string().optional().default(''),
 });
 
 const parsed = envSchema.safeParse(process.env);
