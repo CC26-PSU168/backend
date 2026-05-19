@@ -1,9 +1,6 @@
 #!/bin/sh
-# start.sh — Production startup script for Render
-set -e
-
-echo "==> Running Prisma migrations..."
-npx prisma migrate deploy || echo "⚠️  Migration skipped or failed (schema may already be up-to-date)"
-
-echo "==> Starting server..."
+# start.sh — Production startup for Render
+# NOTE: Run migrations separately via 'npx prisma migrate deploy' in Render's pre-deploy command
+# or run once manually. Do NOT block server startup with migrations.
+echo "==> Starting Budgetly Backend..."
 node dist/server.js
