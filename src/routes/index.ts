@@ -9,6 +9,8 @@ import notificationRoutes from './notification.routes';
 import profileRoutes from './profile.routes';
 import investmentRoutes from './investment.routes';
 
+import mlRoutes from './ml.routes';
+
 const router = Router();
 
 // Health check
@@ -42,5 +44,8 @@ router.use('/profile', profileRoutes);
 
 // Investment
 router.use('/investment', investmentRoutes);
+
+// ML
+router.use('/ml', mlRoutes);
 
 export default router;
