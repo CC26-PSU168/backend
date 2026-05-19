@@ -8,7 +8,11 @@ passport.use(
     {
       clientID: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
-      callbackURL: `/api/v1/auth/google/callback`,
+      // Use absolute URL — relative paths resolve to http:// on Render (proxy mismatch)
+      // RENDER_EXTERNAL_URL is automatically injected by Render at runtime
+      callbackURL: process.env.RENDER_EXTERNAL_URL
+        ? `${process.env.RENDER_EXTERNAL_URL}/api/v1/auth/google/callback`
+        : `http://localhost:${env.PORT}/api/v1/auth/google/callback`,
     },
     async (_accessToken, _refreshToken, profile, done) => {
       try {
