@@ -19,7 +19,8 @@ router.use('/', authenticate, async (req, res) => {
       user_id: userId
     }).toString();
 
-    const targetUrl = `${ML_SERVICE_URL}${req.path}${queryParams ? '?' + queryParams : ''}`;
+    const baseUrl = ML_SERVICE_URL.endsWith('/') ? ML_SERVICE_URL.slice(0, -1) : ML_SERVICE_URL;
+    const targetUrl = `${baseUrl}${req.path}${queryParams ? '?' + queryParams : ''}`;
     
     const response = await axios({
       method: req.method,
