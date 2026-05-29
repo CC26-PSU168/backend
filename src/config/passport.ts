@@ -12,7 +12,9 @@ passport.use(
       // RENDER_EXTERNAL_URL is automatically injected by Render at runtime
       callbackURL: process.env.RENDER_EXTERNAL_URL
         ? `${process.env.RENDER_EXTERNAL_URL}/api/v1/auth/google/callback`
-        : `http://localhost:${env.PORT}/api/v1/auth/google/callback`,
+        : process.env.BACKEND_URL
+          ? `${process.env.BACKEND_URL}/api/v1/auth/google/callback`
+          : `http://localhost:${env.PORT}/api/v1/auth/google/callback`,
     },
     async (_accessToken, _refreshToken, profile, done) => {
       try {

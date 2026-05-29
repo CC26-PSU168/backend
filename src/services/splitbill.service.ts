@@ -11,7 +11,10 @@ interface ItemInput {
 
 interface AssignmentInput {
   itemIndex: number;
-  participantIndices: number[];
+  assignees: {
+    participantIndex: number;
+    qty: number;
+  }[];
 }
 
 interface ParticipantInput {
@@ -54,7 +57,10 @@ export class SplitBillService {
         unitPrice: Number(item.unitPrice),
         subtotal: Number(item.subtotal),
         createdAt: item.createdAt,
-        assignedTo: item.assignments.map((a: any) => a.participant.name),
+        assignments: item.assignments.map((a: any) => ({
+          name: a.participant.name,
+          qty: a.qty,
+        })),
       })),
     }));
   }
@@ -81,10 +87,10 @@ export class SplitBillService {
         shareMap[i] = 0;
       });
 
-      assignments.forEach(({ itemIndex, participantIndices }: AssignmentInput) => {
+      assignments.forEach(({ itemIndex, assignees }: AssignmentInput) => {
         const item = items[itemIndex];
-        const splitAmount = Math.round(item.subtotal / participantIndices.length);
-        participantIndices.forEach((pIdx: number) => {
+        assignees.forEach(({ participantIndex: pIdx, qty }) => {
+          const splitAmount = Math.round((item.unitPrice * qty));
           shareMap[pIdx] = (shareMap[pIdx] ?? 0) + splitAmount;
         });
       });
@@ -132,12 +138,13 @@ export class SplitBillService {
       // 4. Buat assignments (item ↔ participant)
       if (splitMethod === 'item' && assignments.length > 0) {
         await Promise.all(
-          assignments.flatMap(({ itemIndex, participantIndices }: AssignmentInput) =>
-            participantIndices.map((pIdx: number) =>
+          assignments.flatMap(({ itemIndex, assignees }: AssignmentInput) =>
+            assignees.map(({ participantIndex: pIdx, qty }) =>
               tx.splitBillItemAssignment.create({
                 data: {
                   itemId: createdItems[itemIndex].id,
                   participantId: createdParticipants[pIdx].id,
+                  qty: qty,
                 },
               })
             )
