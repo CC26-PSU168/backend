@@ -13,8 +13,13 @@ const participantSchema = z.object({
 
 const assignmentSchema = z.object({
   itemIndex: z.number().int().min(0),
-  participantIndices: z
-    .array(z.number().int().min(0))
+  assignees: z
+    .array(
+      z.object({
+        participantIndex: z.number().int().min(0),
+        qty: z.number().int().positive('Qty harus lebih dari 0'),
+      })
+    )
     .min(1, 'Minimal 1 peserta per item'),
 });
 

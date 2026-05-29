@@ -7,8 +7,6 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 // ==================== ENUMS ====================
@@ -206,6 +204,7 @@ model SplitBillItemAssignment {
   id            String               @id @default(uuid())
   itemId        String
   participantId String
+  qty           Int                  @default(1)
 
   item          SplitBillItem        @relation(fields: [itemId], references: [id], onDelete: Cascade)
   participant   SplitBillParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
