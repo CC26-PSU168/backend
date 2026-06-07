@@ -64,11 +64,10 @@ export class BudgetService {
   }
 
   /**
-   * Create a new budget entry.
+   * Create or update a budget entry (upsert).
    */
   static async create(userId: string, data: CreateBudgetInput) {
-    // Check for duplicate (unique constraint)
-    const existing = await prisma.budget.findUnique({
+    return prisma.budget.upsert({
       where: {
         userId_category_month_year: {
           userId,
@@ -77,14 +76,10 @@ export class BudgetService {
           year: data.year,
         },
       },
-    });
-
-    if (existing) {
-      throw { statusCode: 409, message: `Budget untuk kategori "${data.category}" di bulan ini sudah ada` };
-    }
-
-    return prisma.budget.create({
-      data: {
+      update: {
+        limitAmount: data.limitAmount,
+      },
+      create: {
         userId,
         category: data.category,
         limitAmount: data.limitAmount,
